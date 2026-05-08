@@ -25,8 +25,16 @@ class Buffet_Calendar_Backend {
 
 	const FALLBACK_COLOR = '#cccccc';
 
+	/**
+	 * Hook suffixes returned by add_menu_page / add_submenu_page, used to gate
+	 * asset enqueues to only those pages.
+	 */
+	private $calendar_page_hook = '';
+	private $settings_page_hook = '';
+
 	public function __construct() {
 		add_action( 'admin_enqueue_scripts', array( $this, 'register_scripts' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		add_action( 'admin_post_buffet_calendar_save_data', array( $this, 'save_calendar_data' ) );
 		add_action( 'admin_post_buffet_calendar_save_settings', array( $this, 'save_settings_data' ) );
@@ -40,7 +48,7 @@ class Buffet_Calendar_Backend {
 	}
 
 	public function admin_menu() {
-		add_menu_page(
+		$this->calendar_page_hook = add_menu_page(
 			__( 'Calendar Timings', 'buffet-calendar' ),
 			__( 'Calendar', 'buffet-calendar' ),
 			'manage_options',
@@ -50,7 +58,7 @@ class Buffet_Calendar_Backend {
 			4
 		);
 
-		add_submenu_page(
+		$this->settings_page_hook = add_submenu_page(
 			'buffet-calendar-page',
 			__( 'Calendar Settings', 'buffet-calendar' ),
 			__( 'Calendar Settings', 'buffet-calendar' ),
@@ -58,6 +66,25 @@ class Buffet_Calendar_Backend {
 			'buffet-calendar-settings-page',
 			array( $this, 'settings_page_callback' )
 		);
+	}
+
+	/**
+	 * Load plugin admin assets only on the plugin's own admin pages.
+	 * Runs on `admin_enqueue_scripts`; WP passes the current page hook as $hook.
+	 */
+	public function enqueue_admin_assets( $hook ) {
+		if ( $hook === $this->calendar_page_hook ) {
+			wp_enqueue_style( 'buffet_calendar_backend-bootstrap-grid' );
+			wp_enqueue_style( 'buffet_calendar_backend-calendar' );
+			wp_enqueue_script( 'buffet_calendar_backend-calendar' );
+			return;
+		}
+		if ( $hook === $this->settings_page_hook ) {
+			wp_enqueue_style( 'wp-color-picker' );
+			wp_enqueue_style( 'buffet_calendar_backend-calendar' );
+			wp_enqueue_script( 'buffet_calendar_backend-settings' );
+			return;
+		}
 	}
 
 	/**
@@ -160,9 +187,7 @@ class Buffet_Calendar_Backend {
 			return;
 		}
 
-		wp_enqueue_style( 'buffet_calendar_backend-bootstrap-grid' );
-		wp_enqueue_style( 'buffet_calendar_backend-calendar' );
-		wp_enqueue_script( 'buffet_calendar_backend-calendar' );
+		// Assets are enqueued by enqueue_admin_assets() on this page hook.
 
 		$calendar = new Calendar;
 		$calendar->stylesheet();
@@ -186,21 +211,23 @@ class Buffet_Calendar_Backend {
 			// Dynamic per-label color rules. The CSS we emit is built from a sanitized hex value.
 			echo self::render_dynamic_styles( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			?>
-			<form id="buffet_calendar_form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-				<?php wp_nonce_field( self::NONCE_ACTION, self::NONCE_NAME ); ?>
-				<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-calendar' ); ?>">
-				<div class="mt-5 row">
-					<?php foreach ( $months as $month ) : ?>
-						<div class="col-md-12">
-							<div class="mb-5 cldr">
-								<?php $calendar->render( [ 'startDate' => $month, 'color' => 'light-grey' ] ); ?>
+			<div class="buffet-calendar">
+				<form id="buffet_calendar_form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<?php wp_nonce_field( self::NONCE_ACTION, self::NONCE_NAME ); ?>
+					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-calendar' ); ?>">
+					<div class="mt-5 row">
+						<?php foreach ( $months as $month ) : ?>
+							<div class="col-md-12">
+								<div class="mb-5 cldr">
+									<?php $calendar->render( [ 'startDate' => $month, 'color' => 'light-grey' ] ); ?>
+								</div>
 							</div>
-						</div>
-					<?php endforeach; ?>
-				</div>
-				<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-calendar' ); ?>">
-				<input type="hidden" name="action" value="buffet_calendar_save_data">
-			</form>
+						<?php endforeach; ?>
+					</div>
+					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-calendar' ); ?>">
+					<input type="hidden" name="action" value="buffet_calendar_save_data">
+				</form>
+			</div>
 		</div>
 		<?php
 	}
@@ -405,9 +432,7 @@ class Buffet_Calendar_Backend {
 			return;
 		}
 
-		wp_enqueue_style( 'wp-color-picker' );
-		wp_enqueue_style( 'buffet_calendar_backend-calendar' );
-		wp_enqueue_script( 'buffet_calendar_backend-settings' );
+		// Assets are enqueued by enqueue_admin_assets() on this page hook.
 
 		$settings = self::get_settings();
 		?>
@@ -485,7 +510,7 @@ class Buffet_Calendar_Backend {
 	}
 
 	public function register_scripts() {
-		wp_register_style( 'buffet_calendar_backend-bootstrap-grid', BUFFET_CALENDAR_URI . 'assets/css/bootstrap-grid.min.css', [], '1.1' );
+		wp_register_style( 'buffet_calendar_backend-bootstrap-grid', BUFFET_CALENDAR_URI . 'assets/css/bootstrap-grid.min.css', [], '1.2' );
 		wp_register_style( 'buffet_calendar_backend-calendar', BUFFET_CALENDAR_URI . 'assets/css/calendar.css', [], '1.16' );
 		wp_register_script( 'buffet_calendar_backend-calendar', BUFFET_CALENDAR_URI . 'assets/js/calendar-timings-admin.js', [ 'jquery' ], '1.1', true );
 		wp_register_script( 'buffet_calendar_backend-settings', BUFFET_CALENDAR_URI . 'assets/js/calendar-settings-admin.js', [ 'jquery', 'wp-color-picker' ], '1.0', true );

@@ -14,9 +14,12 @@ class Buffet_Calendar_Frontend {
 	 */
 	private static $instance;
 
+	const SHORTCODE = 'buffet_calendar_frontend';
+
 	public function __construct() {
-		add_shortcode( 'buffet_calendar_frontend', array( $this, 'display_shortcode' ) );
+		add_shortcode( self::SHORTCODE, array( $this, 'display_shortcode' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_scripts' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue_for_shortcode' ) );
 	}
 
 	public static function instance() {
@@ -26,11 +29,32 @@ class Buffet_Calendar_Frontend {
 		return self::$instance;
 	}
 
-	public function display_shortcode() {
+	/**
+	 * Pre-enqueue assets when the current singular post/page contains the shortcode.
+	 * This ensures styles end up in <head> rather than the footer (no FOUC).
+	 */
+	public function maybe_enqueue_for_shortcode() {
+		if ( ! is_singular() ) {
+			return;
+		}
+		$post = get_post();
+		if ( $post && has_shortcode( $post->post_content, self::SHORTCODE ) ) {
+			$this->enqueue_assets();
+		}
+	}
 
+	private function enqueue_assets() {
 		wp_enqueue_style( 'buffet_calendar_frontend-bootstrap-grid' );
 		wp_enqueue_style( 'buffet_calendar_frontend-calendar' );
 		wp_enqueue_script( 'buffet_calendar_frontend-calendar' );
+	}
+
+	public function display_shortcode() {
+
+		// Fallback enqueue for cases where has_shortcode() didn't catch it
+		// (shortcode in a widget, page-builder block, custom post field, etc.).
+		// Calling wp_enqueue_* a second time with the same handle is a no-op.
+		$this->enqueue_assets();
 
 		ob_start();
 
@@ -57,7 +81,7 @@ class Buffet_Calendar_Frontend {
 		);
 
 		?>
-        <div class="calendar-frontend">
+        <div class="buffet-calendar calendar-frontend">
 			<?php
 			// Dynamic per-label color rules (built from sanitized hex values).
 			echo Buffet_Calendar_Backend::render_dynamic_styles( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -108,7 +132,7 @@ class Buffet_Calendar_Frontend {
 	}
 
 	public function register_scripts() {
-		wp_register_style( 'buffet_calendar_frontend-bootstrap-grid', BUFFET_CALENDAR_URI . 'assets/css/bootstrap-grid.min.css', [], '1.1' );
+		wp_register_style( 'buffet_calendar_frontend-bootstrap-grid', BUFFET_CALENDAR_URI . 'assets/css/bootstrap-grid.min.css', [], '1.2' );
 		wp_register_style( 'buffet_calendar_frontend-calendar', BUFFET_CALENDAR_URI . 'assets/css/calendar.css', [], '1.18' );
 		wp_register_script( 'buffet_calendar_frontend-calendar', BUFFET_CALENDAR_URI . 'assets/js/calendar-timings.js', [], '1.1', true );
 	}
