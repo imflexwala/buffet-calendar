@@ -1,0 +1,5 @@
+{
+    "require": {
+        "benhall14/php-calendar": "^2.0"
+    }
+}
