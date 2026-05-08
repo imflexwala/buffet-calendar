@@ -9,7 +9,3 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 
 delete_option( 'buffet_calendar_data' );
 delete_option( 'buffet_calendar_settings_data' );
-delete_option( 'buffet_calendar_migrated' );
-// Legacy options (pre-1.0 internal naming).
-delete_option( 'hcft_calendar_data' );
-delete_option( 'hcft_calendar_settings_data' );
