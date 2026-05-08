@@ -364,7 +364,8 @@ class Buffet_Calendar_Backend {
 		}
 
 		if ( isset( $_POST['submit'] ) && isset( $_POST['buffet_calendar_data'] ) ) {
-			$raw       = wp_unslash( $_POST['buffet_calendar_data'] );
+			// Array is sanitized inside sanitize_calendar_data() (each leaf validated against an allow-list).
+			$raw       = wp_unslash( $_POST['buffet_calendar_data'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			$sanitized = self::sanitize_calendar_data( $raw );
 			update_option( 'buffet_calendar_data', wp_json_encode( $sanitized ) );
 		}
@@ -388,7 +389,8 @@ class Buffet_Calendar_Backend {
 		}
 
 		if ( isset( $_POST['submit'] ) && isset( $_POST['buffet_calendar_setting'] ) ) {
-			$raw       = wp_unslash( $_POST['buffet_calendar_setting'] );
+			// Array is sanitized inside sanitize_settings_data() (label via sanitize_textarea_field, color via regex, enabled coerced to bool).
+			$raw       = wp_unslash( $_POST['buffet_calendar_setting'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			$sanitized = self::sanitize_settings_data( $raw );
 			update_option( 'buffet_calendar_settings_data', wp_json_encode( $sanitized ) );
 		}
@@ -447,20 +449,20 @@ class Buffet_Calendar_Backend {
 	}
 
 	private static function render_settings_row( $id, $row ) {
-		$id_attr = esc_attr( (string) $id );
+		$id      = (string) $id;
 		$label   = isset( $row['label'] ) ? (string) $row['label'] : '';
 		$color   = isset( $row['color'] ) ? (string) $row['color'] : self::FALLBACK_COLOR;
 		$enabled = ! empty( $row['enabled'] );
 		?>
-		<tr class="buffet-calendar-settings-row" data-row-id="<?php echo $id_attr; ?>">
+		<tr class="buffet-calendar-settings-row" data-row-id="<?php echo esc_attr( $id ); ?>">
 			<td>
-				<textarea name="buffet_calendar_setting[<?php echo $id_attr; ?>][label]"
+				<textarea name="buffet_calendar_setting[<?php echo esc_attr( $id ); ?>][label]"
 				          rows="2"
 				          class="buffet-calendar-settings-textarea"><?php echo esc_textarea( $label ); ?></textarea>
 			</td>
 			<td>
 				<input type="text"
-				       name="buffet_calendar_setting[<?php echo $id_attr; ?>][color]"
+				       name="buffet_calendar_setting[<?php echo esc_attr( $id ); ?>][color]"
 				       value="<?php echo esc_attr( $color ); ?>"
 				       class="buffet-calendar-color-picker"
 				       data-default-color="<?php echo esc_attr( $color ); ?>">
@@ -468,7 +470,7 @@ class Buffet_Calendar_Backend {
 			<td>
 				<label>
 					<input type="checkbox"
-					       name="buffet_calendar_setting[<?php echo $id_attr; ?>][enabled]"
+					       name="buffet_calendar_setting[<?php echo esc_attr( $id ); ?>][enabled]"
 					       value="1"
 					       <?php checked( $enabled ); ?>>
 				</label>

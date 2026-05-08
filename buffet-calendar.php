@@ -29,10 +29,5 @@ if ( ! class_exists( 'Buffet_Calendar_Backend' ) ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-buffet-calendar-backend.php';
 }
 
-function buffet_calendar_load_textdomain() {
-	load_plugin_textdomain( 'buffet-calendar', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
-}
-add_action( 'init', 'buffet_calendar_load_textdomain' );
-
-$buffetCalendarFrontend = Buffet_Calendar_Frontend::instance();
-$buffetCalendarBackend  = Buffet_Calendar_Backend::instance();
+Buffet_Calendar_Frontend::instance();
+Buffet_Calendar_Backend::instance();
