@@ -1,5 +1,5 @@
 === Buffet Calendar and Meal Schedule - Opening Hours with Pricing ===
-Contributors: mustafaflexwala
+Contributors: imflexwala
 Tags: opening hours, buffet, meal schedule, restaurant hours, hotel calendar
 Requires at least: 5.6
 Tested up to: 6.9
