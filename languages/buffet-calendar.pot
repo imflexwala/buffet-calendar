@@ -1,0 +1,74 @@
+# Copyright (C) 2026 Mustafa Flexwala
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Buffet Calendar 1.0.0\n"
+"Report-Msgid-Bugs-To: https://www.linkedin.com/in/imflexwala/\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-05-08T00:00:00+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Domain: buffet-calendar\n"
+
+#: includes/class-buffet-calendar-backend.php:45
+msgid "Calendar Timings"
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:46
+msgid "Calendar"
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:56
+#: includes/class-buffet-calendar-backend.php:57
+msgid "Calendar Settings"
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:177
+msgid "Select an option"
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:248
+#: includes/class-buffet-calendar-backend.php:272
+msgid "You do not have permission to perform this action."
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:256
+#: includes/class-buffet-calendar-backend.php:280
+msgid "Security check failed."
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:303
+msgid "Breakfast 7:30 am - 10 am, Dinner 4 pm - 9:30 pm"
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:304
+msgid "Breakfast 7:30 am - 10 am, Lunch 12 pm - 2 pm, Dinner 4 pm - 11 pm"
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:305
+msgid "Lunch 12 pm - 4 pm"
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:306
+msgid "Breakfast 7:30 am - 10 am"
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:307
+msgid "Coffee & Cake 4 pm - 9 pm"
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:308
+msgid "Closed"
+msgstr ""
+
+#. translators: %s is a numeric label index, e.g. "1".
+#: includes/class-buffet-calendar-backend.php:325
+msgid "Label %s"
+msgstr ""
+
+#: includes/class-buffet-calendar-frontend.php:87
+msgid "Show more"
+msgstr ""

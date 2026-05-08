@@ -9,7 +9,7 @@ let event_classes = {
 };
 
 jQuery(document).ready(function (){
-    jQuery(".hcft-select").change(function (){
+    jQuery(".buffet-calendar-select").change(function (){
         let id = jQuery(this).data('id');
         jQuery("."+id).removeClass("event-green event-blue event-yellow event-red event-orange event-beige")
             .addClass(event_classes[jQuery(this).val()])

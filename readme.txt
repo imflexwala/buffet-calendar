@@ -1,8 +1,8 @@
-=== Meal Schedule & Buffet Calendar – Opening Hours for Hotels & Restaurants ===
+=== Buffet Calendar ===
 Contributors: mustafaflexwala
 Tags: opening hours, buffet, meal calendar, restaurant hours, availability calendar
 Requires at least: 5.6
-Tested up to: 6.7
+Tested up to: 6.8
 Requires PHP: 7.4
 Stable tag: 1.0.0
 License: GPLv2 or later
@@ -12,7 +12,7 @@ A color-coded monthly calendar to display daily meal times, buffet hours, prices
 
 == Description ==
 
-**Meal Schedule & Buffet Calendar** is the simplest way to publish daily opening hours, meal service windows, and pricing on a WordPress site. Built originally for a German hotel that needed to communicate breakfast, lunch, dinner buffet times, and "coffee & cake" hours at a glance, the plugin works equally well for any restaurant, café, resort, spa, or seasonal venue with varying daily schedules.
+**Buffet Calendar** is the simplest way to publish daily opening hours, meal service windows, and pricing on a WordPress site. Built originally for a German hotel that needed to communicate breakfast, lunch, dinner buffet times, and "coffee & cake" hours at a glance, the plugin works equally well for any restaurant, café, resort, spa, or seasonal venue with varying daily schedules.
 
 Visitors see a clean three-month calendar with each day color-coded by what's available — breakfast, lunch buffet, dinner buffet, coffee & cake, or closed — and a legend that explains the colors and prices. A "Show more" button reveals the rest of the year.
 
@@ -27,7 +27,7 @@ Most calendar plugins are built for events or bookings. None of them are designe
 * **12 months at a glance** — first 3 months shown by default, rest revealed with a "Show more" button
 * **Simple admin UI** — edit any day with a dropdown; no coding required
 * **Responsive layout** — three columns on desktop, stacks cleanly on tablet and mobile
-* **Shortcode-based** — drop `[hapnics_calendar_frontend]` on any page or post
+* **Shortcode-based** — drop `[buffet_calendar_frontend]` on any page or post
 * **Lightweight** — no external services, no tracking, no bloat
 * **Translation-ready** — labels and locale are fully configurable
 
@@ -46,7 +46,7 @@ Most calendar plugins are built for events or bookings. None of them are designe
 2. Activate the plugin through the **Plugins** menu in WordPress.
 3. Go to **Calendar** in the admin sidebar to set each day's category.
 4. Go to **Calendar > Calendar Settings** to customize the 6 legend labels (meal names, prices, etc.).
-5. Add the shortcode `[hapnics_calendar_frontend]` to any page or post.
+5. Add the shortcode `[buffet_calendar_frontend]` to any page or post.
 
 == Frequently Asked Questions ==
 
