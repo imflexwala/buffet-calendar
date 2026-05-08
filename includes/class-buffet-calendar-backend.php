@@ -14,17 +14,16 @@ class Buffet_Calendar_Backend {
 	 */
 	private static $instance;
 
-	public static $event_classes = [
-		"1" => 'event-yellow',
-		"2" => 'event-green',
-		"3" => 'event-orange',
-		"4" => 'event-blue',
-		"5" => 'event-beige',
-		"6" => 'event-red',
-	];
-
 	const NONCE_ACTION = 'buffet_calendar_admin_submit';
 	const NONCE_NAME   = 'buffet_calendar_admin_nonce';
+
+	/**
+	 * Default cell-color alpha applied to user-picked hex colors.
+	 * Kept at ~0.72 to match the original muted look of the calendar cells.
+	 */
+	const COLOR_ALPHA = 0.72;
+
+	const FALLBACK_COLOR = '#cccccc';
 
 	public function __construct() {
 		add_action( 'admin_enqueue_scripts', array( $this, 'register_scripts' ) );
@@ -61,6 +60,100 @@ class Buffet_Calendar_Backend {
 		);
 	}
 
+	/**
+	 * Default settings for a fresh install. The 6 default colors match the original named-color palette.
+	 */
+	private static function default_settings() {
+		return [
+			'1' => [ 'label' => __( 'Breakfast 7:30 am - 10 am, Dinner 4 pm - 9:30 pm', 'buffet-calendar' ),                  'color' => '#e6cf04', 'enabled' => true ],
+			'2' => [ 'label' => __( 'Breakfast 7:30 am - 10 am, Lunch 12 pm - 2 pm, Dinner 4 pm - 11 pm', 'buffet-calendar' ), 'color' => '#22a71c', 'enabled' => true ],
+			'3' => [ 'label' => __( 'Lunch 12 pm - 4 pm', 'buffet-calendar' ),                                                'color' => '#ffa500', 'enabled' => true ],
+			'4' => [ 'label' => __( 'Breakfast 7:30 am - 10 am', 'buffet-calendar' ),                                         'color' => '#0a8cee', 'enabled' => true ],
+			'5' => [ 'label' => __( 'Coffee & Cake 4 pm - 9 pm', 'buffet-calendar' ),                                         'color' => '#f5f5dc', 'enabled' => true ],
+			'6' => [ 'label' => __( 'Closed', 'buffet-calendar' ),                                                            'color' => '#f11111', 'enabled' => true ],
+		];
+	}
+
+	/**
+	 * Read settings, normalizing the legacy flat shape `[id => "label string"]` into the
+	 * new shape `[id => ['label' => ..., 'color' => ..., 'enabled' => ...]]`.
+	 */
+	public static function get_settings() {
+		$raw = json_decode( get_option( 'buffet_calendar_settings_data' ), true );
+		if ( ! is_array( $raw ) || empty( $raw ) ) {
+			return self::default_settings();
+		}
+
+		$first = reset( $raw );
+		if ( ! is_array( $first ) ) {
+			$defaults = self::default_settings();
+			$migrated = [];
+			foreach ( $raw as $key => $label ) {
+				$key                = (string) $key;
+				$migrated[ $key ] = [
+					'label'   => is_string( $label ) ? $label : '',
+					'color'   => isset( $defaults[ $key ]['color'] ) ? $defaults[ $key ]['color'] : self::FALLBACK_COLOR,
+					'enabled' => true,
+				];
+			}
+			return $migrated;
+		}
+
+		$normalized = [];
+		foreach ( $raw as $key => $row ) {
+			if ( ! is_array( $row ) ) {
+				continue;
+			}
+			$key                = (string) $key;
+			$color              = isset( $row['color'] ) && is_string( $row['color'] ) && preg_match( '/^#[0-9a-fA-F]{6}$/', $row['color'] )
+				? strtolower( $row['color'] )
+				: self::FALLBACK_COLOR;
+			$normalized[ $key ] = [
+				'label'   => isset( $row['label'] ) ? (string) $row['label'] : '',
+				'color'   => $color,
+				'enabled' => ! empty( $row['enabled'] ),
+			];
+		}
+		return $normalized;
+	}
+
+	/**
+	 * Convert "#RRGGBB" to "rgba(R, G, B, A)".
+	 */
+	private static function hex_to_rgba( $hex, $alpha = self::COLOR_ALPHA ) {
+		$hex = ltrim( (string) $hex, '#' );
+		if ( strlen( $hex ) !== 6 ) {
+			return self::FALLBACK_COLOR;
+		}
+		$r = hexdec( substr( $hex, 0, 2 ) );
+		$g = hexdec( substr( $hex, 2, 2 ) );
+		$b = hexdec( substr( $hex, 4, 2 ) );
+		return sprintf( 'rgba(%d, %d, %d, %s)', $r, $g, $b, $alpha );
+	}
+
+	/**
+	 * Build a `<style>` block that maps each label id to its calendar-cell and legend-swatch color.
+	 */
+	public static function render_dynamic_styles( $settings ) {
+		if ( empty( $settings ) ) {
+			return '';
+		}
+		$rules = '';
+		foreach ( $settings as $id => $row ) {
+			$id = (int) $id;
+			if ( $id <= 0 ) {
+				continue;
+			}
+			$color = isset( $row['color'] ) ? $row['color'] : self::FALLBACK_COLOR;
+			$rgba  = self::hex_to_rgba( $color );
+			$rules .= sprintf( '.row .calendar tbody tr td.event-%1$d{background:%2$s;}.buffet-calendar-color.color-%1$d{background:%2$s;}', $id, $rgba );
+		}
+		if ( '' === $rules ) {
+			return '';
+		}
+		return '<style id="buffet-calendar-dynamic-styles">' . $rules . '</style>';
+	}
+
 	public function calendar_page_callback() {
 
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -73,7 +166,8 @@ class Buffet_Calendar_Backend {
 
 		$calendar = new Calendar;
 		$calendar->stylesheet();
-		$calendar->setLocale( get_locale() );
+		// Backend admin UI is always English regardless of site locale.
+		$calendar->setLocale( 'en_US' );
 		$calendar->useMondayStartingDate();
 		$months = $this->getMonthsArray();
 
@@ -82,14 +176,19 @@ class Buffet_Calendar_Backend {
 			$calendar_data = [];
 		}
 
-		$calendar->addEvents( self::getEvents( $months, $calendar_data ) );
+		$settings = self::get_settings();
+		$calendar->addEvents( self::getEvents( $months, $calendar_data, true, $settings ) );
 
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+			<?php
+			// Dynamic per-label color rules. The CSS we emit is built from a sanitized hex value.
+			echo self::render_dynamic_styles( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			?>
 			<form id="buffet_calendar_form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<?php wp_nonce_field( self::NONCE_ACTION, self::NONCE_NAME ); ?>
-				<input class="button button-primary" type="submit" name="submit" value="Save">
+				<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-calendar' ); ?>">
 				<div class="mt-5 row">
 					<?php foreach ( $months as $month ) : ?>
 						<div class="col-md-12">
@@ -99,19 +198,25 @@ class Buffet_Calendar_Backend {
 						</div>
 					<?php endforeach; ?>
 				</div>
-				<input class="button button-primary" type="submit" name="submit" value="Save">
+				<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-calendar' ); ?>">
 				<input type="hidden" name="action" value="buffet_calendar_save_data">
 			</form>
 		</div>
 		<?php
 	}
 
-	public static function getEvents( $months, $calendar_data, $select = true ): array {
+	public static function getEvents( $months, $calendar_data, $select = true, $settings = null ): array {
 
-		$events        = [];
-		$settings_data = json_decode( get_option( 'buffet_calendar_settings_data' ), true );
-		if ( ! is_array( $settings_data ) ) {
-			$settings_data = [];
+		$events   = [];
+		$settings = is_array( $settings ) ? $settings : self::get_settings();
+
+		// Pick a reasonable fallback id for unset days: prefer "6" (legacy "Closed"), else last id.
+		$fallback_id = '';
+		if ( isset( $settings['6'] ) ) {
+			$fallback_id = '6';
+		} elseif ( ! empty( $settings ) ) {
+			$keys        = array_keys( $settings );
+			$fallback_id = (string) end( $keys );
 		}
 
 		foreach ( $months as $month ) {
@@ -120,54 +225,34 @@ class Buffet_Calendar_Backend {
 				$calendar_data[ $month ] = [];
 			}
 
-			$dd = $date->format( 'Y-m-d' );
-			if ( ! isset( $calendar_data[ $month ][ $dd ] ) ) {
-				$calendar_data[ $month ][ $dd ] = "6";
-			}
-			$event = array(
-				'start'             => $dd,
-				'end'               => $dd,
-				'summary'           => '',
-				'mask'              => false,
-				'classes'           => [ self::$event_classes[ $calendar_data[ $month ][ $dd ] ] ?? '', 'event-' . $month . '-' . $dd ],
-				'event_box_classes' => [ 'event-box-1' ],
-				'title'             => '',
-			);
-
-			if ( $select ) {
-				$event['summary'] = self::getSelectInput( $month, $dd, $calendar_data[ $month ][ $dd ], $settings_data );
-			}
-
-			$events[] = $event;
+			$dd       = $date->format( 'Y-m-d' );
+			$value    = isset( $calendar_data[ $month ][ $dd ] ) ? (string) $calendar_data[ $month ][ $dd ] : $fallback_id;
+			$events[] = self::build_event( $month, $dd, $value, $settings, $select );
 
 			for ( $i = 1; $i < $date->daysInMonth; $i++ ) {
-
-				$dd = $date->addDay()->format( 'Y-m-d' );
-				if ( ! isset( $calendar_data[ $month ][ $dd ] ) ) {
-					$calendar_data[ $month ][ $dd ] = "6";
-				}
-
-				$event = array(
-					'start'             => $dd,
-					'end'               => $dd,
-					'summary'           => '',
-					'mask'              => false,
-					'classes'           => [ self::$event_classes[ $calendar_data[ $month ][ $dd ] ] ?? '', 'event-' . $month . '-' . $dd ],
-					'event_box_classes' => [ 'event-box-1' ],
-					'title'             => '',
-				);
-
-				if ( $select ) {
-					$event['summary'] = self::getSelectInput( $month, $dd, $calendar_data[ $month ][ $dd ], $settings_data );
-				}
-				$events[] = $event;
+				$dd       = $date->addDay()->format( 'Y-m-d' );
+				$value    = isset( $calendar_data[ $month ][ $dd ] ) ? (string) $calendar_data[ $month ][ $dd ] : $fallback_id;
+				$events[] = self::build_event( $month, $dd, $value, $settings, $select );
 			}
 		}
 
 		return $events;
 	}
 
-	public static function getSelectInput( $month, $day, $value, $settings_data ) {
+	private static function build_event( $month, $dd, $value, $settings, $select ) {
+		$event_class = ( '' !== $value && isset( $settings[ $value ] ) ) ? 'event-' . (int) $value : '';
+		return [
+			'start'             => $dd,
+			'end'               => $dd,
+			'summary'           => $select ? self::getSelectInput( $month, $dd, $value, $settings ) : '',
+			'mask'              => false,
+			'classes'           => [ $event_class, 'event-' . $month . '-' . $dd ],
+			'event_box_classes' => [ 'event-box-1' ],
+			'title'             => '',
+		];
+	}
+
+	public static function getSelectInput( $month, $day, $value, $settings ) {
 		ob_start();
 		?>
 		<label>
@@ -175,15 +260,17 @@ class Buffet_Calendar_Backend {
 			        name="buffet_calendar_data[<?php echo esc_attr( $month ); ?>][<?php echo esc_attr( $day ); ?>]"
 			        class="buffet-calendar-select">
 				<option value="" <?php selected( $value, '' ); ?>><?php esc_html_e( 'Select an option', 'buffet-calendar' ); ?></option>
-				<?php foreach ( $settings_data as $key => $text ) : ?>
-					<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $value, $key ); ?>>
-						<?php echo esc_html( $text ); ?>
+				<?php foreach ( $settings as $key => $row ) : ?>
+					<?php if ( empty( $row['enabled'] ) && (string) $key !== (string) $value ) {
+						continue;
+					} ?>
+					<option value="<?php echo esc_attr( $key ); ?>" <?php selected( (string) $value, (string) $key ); ?>>
+						<?php echo esc_html( $row['label'] ); ?>
 					</option>
 				<?php endforeach; ?>
 			</select>
 		</label>
 		<?php
-
 		return ob_get_clean();
 	}
 
@@ -200,14 +287,16 @@ class Buffet_Calendar_Backend {
 
 	/**
 	 * Recursively sanitize the calendar-data array. Expected shape:
-	 * [ 'YYYY-MM-DD' => [ 'YYYY-MM-DD' => '1'..'6' or '' ] ]
+	 * [ 'YYYY-MM-DD' => [ 'YYYY-MM-DD' => '<positive int>' or '' ] ]
+	 * Numeric values are validated against current settings ids.
 	 */
 	private static function sanitize_calendar_data( $data ) {
 		if ( ! is_array( $data ) ) {
 			return [];
 		}
-		$allowed_values = [ '', '1', '2', '3', '4', '5', '6' ];
-		$sanitized      = [];
+		$settings  = self::get_settings();
+		$valid_ids = array_map( 'strval', array_keys( $settings ) );
+		$sanitized = [];
 		foreach ( $data as $month_key => $days ) {
 			if ( ! is_string( $month_key ) || ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $month_key ) || ! is_array( $days ) ) {
 				continue;
@@ -218,7 +307,7 @@ class Buffet_Calendar_Backend {
 					continue;
 				}
 				$value = is_scalar( $value ) ? (string) $value : '';
-				if ( in_array( $value, $allowed_values, true ) ) {
+				if ( '' === $value || in_array( $value, $valid_ids, true ) ) {
 					$sanitized[ $month_key ][ $day_key ] = $value;
 				}
 			}
@@ -227,18 +316,36 @@ class Buffet_Calendar_Backend {
 	}
 
 	/**
-	 * Sanitize the settings labels array. Expected keys: '1' through '6'.
+	 * Sanitize the new settings shape: [ id => [ label, color, enabled ] ].
+	 * Variable number of rows allowed; ids are positive integers.
 	 */
 	private static function sanitize_settings_data( $data ) {
 		if ( ! is_array( $data ) ) {
 			return [];
 		}
 		$sanitized = [];
-		foreach ( [ '1', '2', '3', '4', '5', '6' ] as $key ) {
-			if ( isset( $data[ $key ] ) && is_scalar( $data[ $key ] ) ) {
-				$sanitized[ $key ] = sanitize_textarea_field( (string) $data[ $key ] );
+		foreach ( $data as $key => $row ) {
+			if ( ! is_array( $row ) ) {
+				continue;
 			}
+			$id = (int) $key;
+			if ( $id <= 0 ) {
+				continue;
+			}
+			$label = isset( $row['label'] ) && is_scalar( $row['label'] )
+				? sanitize_textarea_field( (string) $row['label'] )
+				: '';
+			$color = isset( $row['color'] ) && is_string( $row['color'] ) && preg_match( '/^#[0-9a-fA-F]{6}$/', $row['color'] )
+				? strtolower( $row['color'] )
+				: self::FALLBACK_COLOR;
+			$enabled = ! empty( $row['enabled'] );
+			$sanitized[ (string) $id ] = [
+				'label'   => $label,
+				'color'   => $color,
+				'enabled' => $enabled,
+			];
 		}
+		ksort( $sanitized, SORT_NUMERIC );
 		return $sanitized;
 	}
 
@@ -296,56 +403,90 @@ class Buffet_Calendar_Backend {
 			return;
 		}
 
-		$settings_data = json_decode( get_option( 'buffet_calendar_settings_data' ), true );
+		wp_enqueue_style( 'wp-color-picker' );
+		wp_enqueue_style( 'buffet_calendar_backend-calendar' );
+		wp_enqueue_script( 'buffet_calendar_backend-settings' );
 
-		if ( empty( $settings_data ) || ! is_array( $settings_data ) ) {
-			$settings_data = [
-				"1" => __( 'Breakfast 7:30 am - 10 am, Dinner 4 pm - 9:30 pm', 'buffet-calendar' ),
-				"2" => __( 'Breakfast 7:30 am - 10 am, Lunch 12 pm - 2 pm, Dinner 4 pm - 11 pm', 'buffet-calendar' ),
-				"3" => __( 'Lunch 12 pm - 4 pm', 'buffet-calendar' ),
-				"4" => __( 'Breakfast 7:30 am - 10 am', 'buffet-calendar' ),
-				"5" => __( 'Coffee & Cake 4 pm - 9 pm', 'buffet-calendar' ),
-				"6" => __( 'Closed', 'buffet-calendar' ),
-			];
-		}
-
+		$settings = self::get_settings();
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<?php wp_nonce_field( self::NONCE_ACTION, self::NONCE_NAME ); ?>
-				<table class="form-table">
-					<tbody>
-					<?php foreach ( $settings_data as $key => $value ) : ?>
-						<tr valign="top">
-							<th scope="row">
-								<label for="label_<?php echo esc_attr( $key ); ?>">
-									<?php
-									/* translators: %s is a numeric label index, e.g. "1". */
-									echo esc_html( sprintf( __( 'Label %s', 'buffet-calendar' ), $key ) );
-									?>
-								</label>
-							</th>
-							<td class="forminp forminp-text">
-								<textarea name="buffet_calendar_setting[<?php echo esc_attr( $key ); ?>]"
-								          id="label_<?php echo esc_attr( $key ); ?>"
-								          class="buffet-calendar-settings-textarea"><?php echo esc_textarea( $value ); ?></textarea>
-							</td>
+				<table class="widefat buffet-calendar-settings-table">
+					<thead>
+						<tr>
+							<th scope="col" class="buffet-calendar-col-label"><?php esc_html_e( 'Label', 'buffet-calendar' ); ?></th>
+							<th scope="col" class="buffet-calendar-col-color"><?php esc_html_e( 'Color', 'buffet-calendar' ); ?></th>
+							<th scope="col" class="buffet-calendar-col-enabled"><?php esc_html_e( 'Enabled', 'buffet-calendar' ); ?></th>
+							<th scope="col" class="buffet-calendar-col-actions"></th>
 						</tr>
+					</thead>
+					<tbody id="buffet-calendar-settings-rows">
+					<?php foreach ( $settings as $id => $row ) : ?>
+						<?php self::render_settings_row( $id, $row ); ?>
 					<?php endforeach; ?>
 					</tbody>
 				</table>
-				<input class="button button-primary" type="submit" name="submit" value="Save">
+				<p>
+					<button type="button" class="button" id="buffet-calendar-add-row">
+						<?php esc_html_e( 'Add Label', 'buffet-calendar' ); ?>
+					</button>
+				</p>
 				<input type="hidden" name="action" value="buffet_calendar_save_settings">
+				<p class="submit">
+					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-calendar' ); ?>">
+				</p>
 			</form>
+
+			<script type="text/html" id="buffet-calendar-row-template">
+				<?php self::render_settings_row( '__ID__', [ 'label' => '', 'color' => self::FALLBACK_COLOR, 'enabled' => true ] ); ?>
+			</script>
 		</div>
+		<?php
+	}
+
+	private static function render_settings_row( $id, $row ) {
+		$id_attr = esc_attr( (string) $id );
+		$label   = isset( $row['label'] ) ? (string) $row['label'] : '';
+		$color   = isset( $row['color'] ) ? (string) $row['color'] : self::FALLBACK_COLOR;
+		$enabled = ! empty( $row['enabled'] );
+		?>
+		<tr class="buffet-calendar-settings-row" data-row-id="<?php echo $id_attr; ?>">
+			<td>
+				<textarea name="buffet_calendar_setting[<?php echo $id_attr; ?>][label]"
+				          rows="2"
+				          class="buffet-calendar-settings-textarea"><?php echo esc_textarea( $label ); ?></textarea>
+			</td>
+			<td>
+				<input type="text"
+				       name="buffet_calendar_setting[<?php echo $id_attr; ?>][color]"
+				       value="<?php echo esc_attr( $color ); ?>"
+				       class="buffet-calendar-color-picker"
+				       data-default-color="<?php echo esc_attr( $color ); ?>">
+			</td>
+			<td>
+				<label>
+					<input type="checkbox"
+					       name="buffet_calendar_setting[<?php echo $id_attr; ?>][enabled]"
+					       value="1"
+					       <?php checked( $enabled ); ?>>
+				</label>
+			</td>
+			<td>
+				<button type="button" class="button-link button-link-delete buffet-calendar-remove-row">
+					<?php esc_html_e( 'Remove', 'buffet-calendar' ); ?>
+				</button>
+			</td>
+		</tr>
 		<?php
 	}
 
 	public function register_scripts() {
 		wp_register_style( 'buffet_calendar_backend-bootstrap-grid', BUFFET_CALENDAR_URI . 'assets/css/bootstrap-grid.min.css', [], '1.1' );
-		wp_register_style( 'buffet_calendar_backend-calendar', BUFFET_CALENDAR_URI . 'assets/css/calendar.css', [], '1.15' );
+		wp_register_style( 'buffet_calendar_backend-calendar', BUFFET_CALENDAR_URI . 'assets/css/calendar.css', [], '1.16' );
 		wp_register_script( 'buffet_calendar_backend-calendar', BUFFET_CALENDAR_URI . 'assets/js/calendar-timings-admin.js', [ 'jquery' ], '1.1', true );
+		wp_register_script( 'buffet_calendar_backend-settings', BUFFET_CALENDAR_URI . 'assets/js/calendar-settings-admin.js', [ 'jquery', 'wp-color-picker' ], '1.0', true );
 	}
 
 }

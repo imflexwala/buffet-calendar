@@ -13,62 +13,83 @@ msgstr ""
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Domain: buffet-calendar\n"
 
-#: includes/class-buffet-calendar-backend.php:45
+#: includes/class-buffet-calendar-backend.php:44
 msgid "Calendar Timings"
 msgstr ""
 
-#: includes/class-buffet-calendar-backend.php:46
+#: includes/class-buffet-calendar-backend.php:45
 msgid "Calendar"
 msgstr ""
 
+#: includes/class-buffet-calendar-backend.php:55
 #: includes/class-buffet-calendar-backend.php:56
-#: includes/class-buffet-calendar-backend.php:57
 msgid "Calendar Settings"
 msgstr ""
 
-#: includes/class-buffet-calendar-backend.php:177
-msgid "Select an option"
-msgstr ""
-
-#: includes/class-buffet-calendar-backend.php:248
-#: includes/class-buffet-calendar-backend.php:272
-msgid "You do not have permission to perform this action."
-msgstr ""
-
-#: includes/class-buffet-calendar-backend.php:256
-#: includes/class-buffet-calendar-backend.php:280
-msgid "Security check failed."
-msgstr ""
-
-#: includes/class-buffet-calendar-backend.php:303
+#: includes/class-buffet-calendar-backend.php:68
 msgid "Breakfast 7:30 am - 10 am, Dinner 4 pm - 9:30 pm"
 msgstr ""
 
-#: includes/class-buffet-calendar-backend.php:304
+#: includes/class-buffet-calendar-backend.php:69
 msgid "Breakfast 7:30 am - 10 am, Lunch 12 pm - 2 pm, Dinner 4 pm - 11 pm"
 msgstr ""
 
-#: includes/class-buffet-calendar-backend.php:305
+#: includes/class-buffet-calendar-backend.php:70
 msgid "Lunch 12 pm - 4 pm"
 msgstr ""
 
-#: includes/class-buffet-calendar-backend.php:306
+#: includes/class-buffet-calendar-backend.php:71
 msgid "Breakfast 7:30 am - 10 am"
 msgstr ""
 
-#: includes/class-buffet-calendar-backend.php:307
+#: includes/class-buffet-calendar-backend.php:72
 msgid "Coffee & Cake 4 pm - 9 pm"
 msgstr ""
 
-#: includes/class-buffet-calendar-backend.php:308
+#: includes/class-buffet-calendar-backend.php:73
 msgid "Closed"
 msgstr ""
 
-#. translators: %s is a numeric label index, e.g. "1".
-#: includes/class-buffet-calendar-backend.php:325
-msgid "Label %s"
+#: includes/class-buffet-calendar-backend.php:190
+#: includes/class-buffet-calendar-backend.php:200
+#: includes/class-buffet-calendar-backend.php:437
+msgid "Save"
 msgstr ""
 
-#: includes/class-buffet-calendar-frontend.php:87
+#: includes/class-buffet-calendar-backend.php:261
+msgid "Select an option"
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:354
+#: includes/class-buffet-calendar-backend.php:378
+msgid "You do not have permission to perform this action."
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:362
+#: includes/class-buffet-calendar-backend.php:386
+msgid "Security check failed."
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:418
+msgid "Label"
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:419
+msgid "Color"
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:420
+msgid "Enabled"
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:432
+msgid "Add Label"
+msgstr ""
+
+#: includes/class-buffet-calendar-backend.php:477
+msgid "Remove"
+msgstr ""
+
+#: includes/class-buffet-calendar-frontend.php:77
 msgid "Show more"
 msgstr ""

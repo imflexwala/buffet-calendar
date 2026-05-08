@@ -45,41 +45,31 @@ class Buffet_Calendar_Frontend {
 			$calendar_data = [];
 		}
 
-		$settings_data = json_decode( get_option( 'buffet_calendar_settings_data' ), true );
-		if ( ! is_array( $settings_data ) ) {
-			$settings_data = [];
-		}
+		$settings = Buffet_Calendar_Backend::get_settings();
+		$calendar->addEvents( Buffet_Calendar_Backend::getEvents( $months, $calendar_data, false, $settings ) );
 
-		$calendar->addEvents( Buffet_Calendar_Backend::getEvents( $months, $calendar_data, false ) );
+		// Only enabled labels appear in the legend.
+		$legend_items = array_filter(
+			$settings,
+			static function ( $row ) {
+				return ! empty( $row['enabled'] );
+			}
+		);
 
 		?>
         <div class="calendar-frontend">
+			<?php
+			// Dynamic per-label color rules (built from sanitized hex values).
+			echo Buffet_Calendar_Backend::render_dynamic_styles( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			?>
             <div class="mt-3">
                 <div class="time-grid">
-                    <div class="time-grid-item">
-                        <span class="buffet-calendar-color color-yellow"></span>
-			            <?php echo isset( $settings_data['1'] ) ? nl2br( esc_html( $settings_data['1'] ) ) : ''; ?>
-                    </div>
-                    <div class="time-grid-item">
-                        <span class="buffet-calendar-color color-green"></span>
-			            <?php echo isset( $settings_data['2'] ) ? nl2br( esc_html( $settings_data['2'] ) ) : ''; ?>
-                    </div>
-                    <div class="time-grid-item">
-                        <span class="buffet-calendar-color color-orange"></span>
-			            <?php echo isset( $settings_data['3'] ) ? nl2br( esc_html( $settings_data['3'] ) ) : ''; ?>
-                    </div>
-                    <div class="time-grid-item">
-                        <span class="buffet-calendar-color color-blue"></span>
-			            <?php echo isset( $settings_data['4'] ) ? nl2br( esc_html( $settings_data['4'] ) ) : ''; ?>
-                    </div>
-                    <div class="time-grid-item">
-                        <span class="buffet-calendar-color color-beige"></span>
-			            <?php echo isset( $settings_data['5'] ) ? nl2br( esc_html( $settings_data['5'] ) ) : ''; ?>
-                    </div>
-                    <div class="time-grid-item">
-                        <span class="buffet-calendar-color color-red"></span>
-			            <?php echo isset( $settings_data['6'] ) ? nl2br( esc_html( $settings_data['6'] ) ) : ''; ?>
-                    </div>
+		            <?php foreach ( $legend_items as $id => $row ) : ?>
+                        <div class="time-grid-item">
+                            <span class="buffet-calendar-color color-<?php echo esc_attr( (int) $id ); ?>"></span>
+				            <?php echo nl2br( esc_html( $row['label'] ) ); ?>
+                        </div>
+		            <?php endforeach; ?>
                 </div>
 		        <?php foreach ( $months as $key => $month ) : ?>
 			        <?php if ( $key == 3 ) : ?>
