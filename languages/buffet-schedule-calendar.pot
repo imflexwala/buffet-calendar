@@ -11,7 +11,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-08T00:00:00+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Domain: buffet-calendar\n"
+"X-Domain: buffet-schedule-calendar\n"
 
 #: includes/class-buffet-calendar-backend.php:44
 msgid "Calendar Timings"

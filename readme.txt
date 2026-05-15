@@ -1,4 +1,4 @@
-=== Buffet Calendar and Meal Schedule - Opening Hours with Pricing ===
+=== Buffet and Meal Schedule Calendar ===
 Contributors: imflexwala
 Tags: opening hours, buffet, meal schedule, restaurant hours, hotel calendar
 Requires at least: 5.6
@@ -55,7 +55,7 @@ Most WordPress calendar and event plugins are built for bookings, classes, ticke
 
 == Installation ==
 
-1. Upload the plugin folder to `/wp-content/plugins/buffet-calendar`, or install through the WordPress **Plugins** screen and search for "Buffet Calendar".
+1. Upload the plugin folder to `/wp-content/plugins/buffet-schedule-calendar`, or install through the WordPress **Plugins** screen and search for "Buffet Calendar".
 2. Activate the plugin through the **Plugins** menu.
 3. Go to **Calendar > Calendar Settings** to customize label text, colors, and which labels are enabled. Six defaults are pre-loaded so you can preview immediately.
 4. Go to **Calendar** to assign a label to each day for the next several months.
@@ -85,7 +85,7 @@ Yes — labels are free-text, so include prices, durations, à la carte notes, o
 
 = Does it support languages other than English? =
 
-Yes. A `.pot` translation template ships at `languages/buffet-calendar.pot`. The calendar's month and day names automatically follow your WordPress site language on the frontend. Admin pages stay in English.
+Yes. A `.pot` translation template ships at `languages/buffet-schedule-calendar.pot`. The calendar's month and day names automatically follow your WordPress site language on the frontend. Admin pages stay in English.
 
 = Does it handle bookings, reservations, or payments? =
 
@@ -131,7 +131,7 @@ Just deactivate and delete the plugin from the Plugins screen. The plugin's opti
 * Translucent calendar cell tinting with matching legend swatches.
 * "Show more" toggle for months 4–12.
 * Locale-aware frontend month and day names; English-only admin UI.
-* Translation-ready with a `.pot` template at `languages/buffet-calendar.pot`.
+* Translation-ready with a `.pot` template at `languages/buffet-schedule-calendar.pot`.
 * Clean uninstall — plugin options are deleted via `uninstall.php`.
 
 == Upgrade Notice ==

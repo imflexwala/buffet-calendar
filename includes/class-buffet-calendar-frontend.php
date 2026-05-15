@@ -14,6 +14,14 @@ class Buffet_Calendar_Frontend {
 	 */
 	private static $instance;
 
+	/**
+	 * Guards against enqueuing assets / adding inline style more than once
+	 * (enqueue_assets() is called from both the early hook and the shortcode fallback).
+	 *
+	 * @var bool
+	 */
+	private $assets_enqueued = false;
+
 	const SHORTCODE = 'buffet_calendar_frontend';
 
 	public function __construct() {
@@ -44,9 +52,20 @@ class Buffet_Calendar_Frontend {
 	}
 
 	private function enqueue_assets() {
+		if ( $this->assets_enqueued ) {
+			return;
+		}
+		$this->assets_enqueued = true;
+
 		wp_enqueue_style( 'buffet_calendar_frontend-bootstrap-grid' );
 		wp_enqueue_style( 'buffet_calendar_frontend-calendar' );
 		wp_enqueue_script( 'buffet_calendar_frontend-calendar' );
+
+		// Per-label color rules attached to the calendar stylesheet (safe: regex-validated hex).
+		$css = Buffet_Calendar_Backend::get_dynamic_css( Buffet_Calendar_Backend::get_settings() );
+		if ( '' !== $css ) {
+			wp_add_inline_style( 'buffet_calendar_frontend-calendar', $css );
+		}
 	}
 
 	public function display_shortcode() {
@@ -82,10 +101,7 @@ class Buffet_Calendar_Frontend {
 
 		?>
         <div class="buffet-calendar calendar-frontend">
-			<?php
-			// Dynamic per-label color rules (built from sanitized hex values).
-			echo Buffet_Calendar_Backend::render_dynamic_styles( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			?>
+			<?php // Per-label color rules are attached via wp_add_inline_style() in enqueue_assets(). ?>
             <div class="mt-3">
                 <div class="time-grid">
 		            <?php foreach ( $legend_items as $id => $row ) : ?>
@@ -98,7 +114,7 @@ class Buffet_Calendar_Frontend {
 		        <?php foreach ( $months as $key => $month ) : ?>
 			        <?php if ( $key == 3 ) : ?>
                         <div class="buffet-calendar-text-center">
-                            <div class="buffet-calendar-btn show-row-3"><?php esc_html_e( 'Show more', 'buffet-calendar' ); ?></div>
+                            <div class="buffet-calendar-btn show-row-3"><?php esc_html_e( 'Show more', 'buffet-schedule-calendar' ); ?></div>
                         </div>
 			        <?php endif; ?>
 			        <?php if ( $key == 0 || $key == 3 ) : ?>

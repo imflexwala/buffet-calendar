@@ -49,19 +49,17 @@ class Buffet_Calendar_Backend {
 
 	public function admin_menu() {
 		$this->calendar_page_hook = add_menu_page(
-			__( 'Calendar Timings', 'buffet-calendar' ),
-			__( 'Calendar', 'buffet-calendar' ),
+			__( 'Calendar Timings', 'buffet-schedule-calendar' ),
+			__( 'Buffet Calendar', 'buffet-schedule-calendar' ),
 			'manage_options',
 			'buffet-calendar-page',
 			array( $this, 'calendar_page_callback' ),
-			'dashicons-images-alt2',
-			4
-		);
+			'dashicons-calendar-alt');
 
 		$this->settings_page_hook = add_submenu_page(
 			'buffet-calendar-page',
-			__( 'Calendar Settings', 'buffet-calendar' ),
-			__( 'Calendar Settings', 'buffet-calendar' ),
+			__( 'Calendar Settings', 'buffet-schedule-calendar' ),
+			__( 'Calendar Settings', 'buffet-schedule-calendar' ),
 			'manage_options',
 			'buffet-calendar-settings-page',
 			array( $this, 'settings_page_callback' )
@@ -77,6 +75,7 @@ class Buffet_Calendar_Backend {
 			wp_enqueue_style( 'buffet_calendar_backend-bootstrap-grid' );
 			wp_enqueue_style( 'buffet_calendar_backend-calendar' );
 			wp_enqueue_script( 'buffet_calendar_backend-calendar' );
+			wp_add_inline_style( 'buffet_calendar_backend-calendar', self::get_dynamic_css( self::get_settings() ) );
 			return;
 		}
 		if ( $hook === $this->settings_page_hook ) {
@@ -92,12 +91,12 @@ class Buffet_Calendar_Backend {
 	 */
 	private static function default_settings() {
 		return [
-			'1' => [ 'label' => __( 'Breakfast 7:30 am - 10 am, Dinner 4 pm - 9:30 pm', 'buffet-calendar' ),                  'color' => '#e6cf04', 'enabled' => true ],
-			'2' => [ 'label' => __( 'Breakfast 7:30 am - 10 am, Lunch 12 pm - 2 pm, Dinner 4 pm - 11 pm', 'buffet-calendar' ), 'color' => '#22a71c', 'enabled' => true ],
-			'3' => [ 'label' => __( 'Lunch 12 pm - 4 pm', 'buffet-calendar' ),                                                'color' => '#ffa500', 'enabled' => true ],
-			'4' => [ 'label' => __( 'Breakfast 7:30 am - 10 am', 'buffet-calendar' ),                                         'color' => '#0a8cee', 'enabled' => true ],
-			'5' => [ 'label' => __( 'Coffee & Cake 4 pm - 9 pm', 'buffet-calendar' ),                                         'color' => '#f5f5dc', 'enabled' => true ],
-			'6' => [ 'label' => __( 'Closed', 'buffet-calendar' ),                                                            'color' => '#f11111', 'enabled' => true ],
+			'1' => [ 'label' => __( 'Breakfast 7:30 am - 10 am, Dinner 4 pm - 9:30 pm', 'buffet-schedule-calendar' ),                  'color' => '#e6cf04', 'enabled' => true ],
+			'2' => [ 'label' => __( 'Breakfast 7:30 am - 10 am, Lunch 12 pm - 2 pm, Dinner 4 pm - 11 pm', 'buffet-schedule-calendar' ), 'color' => '#22a71c', 'enabled' => true ],
+			'3' => [ 'label' => __( 'Lunch 12 pm - 4 pm', 'buffet-schedule-calendar' ),                                                'color' => '#ffa500', 'enabled' => true ],
+			'4' => [ 'label' => __( 'Breakfast 7:30 am - 10 am', 'buffet-schedule-calendar' ),                                         'color' => '#0a8cee', 'enabled' => true ],
+			'5' => [ 'label' => __( 'Coffee & Cake 4 pm - 9 pm', 'buffet-schedule-calendar' ),                                         'color' => '#f5f5dc', 'enabled' => true ],
+			'6' => [ 'label' => __( 'Closed', 'buffet-schedule-calendar' ),                                                            'color' => '#f11111', 'enabled' => true ],
 		];
 	}
 
@@ -159,9 +158,12 @@ class Buffet_Calendar_Backend {
 	}
 
 	/**
-	 * Build a `<style>` block that maps each label id to its calendar-cell and legend-swatch color.
+	 * Build the per-label CSS rules that map each label id to its calendar-cell
+	 * and legend-swatch color. Returns bare CSS (no <style> wrapper) for use with
+	 * wp_add_inline_style(). All color values are regex-validated hex, so the
+	 * resulting CSS is safe.
 	 */
-	public static function render_dynamic_styles( $settings ) {
+	public static function get_dynamic_css( $settings ) {
 		if ( empty( $settings ) ) {
 			return '';
 		}
@@ -171,14 +173,11 @@ class Buffet_Calendar_Backend {
 			if ( $id <= 0 ) {
 				continue;
 			}
-			$color = isset( $row['color'] ) ? $row['color'] : self::FALLBACK_COLOR;
-			$rgba  = self::hex_to_rgba( $color );
+			$color  = isset( $row['color'] ) ? $row['color'] : self::FALLBACK_COLOR;
+			$rgba   = self::hex_to_rgba( $color );
 			$rules .= sprintf( '.row .calendar tbody tr td.event-%1$d{background:%2$s;}.buffet-calendar-color.color-%1$d{background:%2$s;}', $id, $rgba );
 		}
-		if ( '' === $rules ) {
-			return '';
-		}
-		return '<style id="buffet-calendar-dynamic-styles">' . $rules . '</style>';
+		return $rules;
 	}
 
 	public function calendar_page_callback() {
@@ -207,14 +206,11 @@ class Buffet_Calendar_Backend {
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			<?php
-			// Dynamic per-label color rules. The CSS we emit is built from a sanitized hex value.
-			echo self::render_dynamic_styles( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			?>
+			<?php // Per-label color rules are attached via wp_add_inline_style() in enqueue_admin_assets(). ?>
 			<div class="buffet-calendar">
 				<form id="buffet_calendar_form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<?php wp_nonce_field( self::NONCE_ACTION, self::NONCE_NAME ); ?>
-					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-calendar' ); ?>">
+					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-schedule-calendar' ); ?>">
 					<div class="mt-5 row">
 						<?php foreach ( $months as $month ) : ?>
 							<div class="col-md-12">
@@ -224,7 +220,7 @@ class Buffet_Calendar_Backend {
 							</div>
 						<?php endforeach; ?>
 					</div>
-					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-calendar' ); ?>">
+					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-schedule-calendar' ); ?>">
 					<input type="hidden" name="action" value="buffet_calendar_save_data">
 				</form>
 			</div>
@@ -286,7 +282,7 @@ class Buffet_Calendar_Backend {
 			<select data-id="<?php echo esc_attr( 'event-' . $month . '-' . $day ); ?>"
 			        name="buffet_calendar_data[<?php echo esc_attr( $month ); ?>][<?php echo esc_attr( $day ); ?>]"
 			        class="buffet-calendar-select">
-				<option value="" <?php selected( $value, '' ); ?>><?php esc_html_e( 'Select an option', 'buffet-calendar' ); ?></option>
+				<option value="" <?php selected( $value, '' ); ?>><?php esc_html_e( 'Select an option', 'buffet-schedule-calendar' ); ?></option>
 				<?php foreach ( $settings as $key => $row ) : ?>
 					<?php if ( empty( $row['enabled'] ) && (string) $key !== (string) $value ) {
 						continue;
@@ -379,7 +375,7 @@ class Buffet_Calendar_Backend {
 	public function save_calendar_data() {
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to perform this action.', 'buffet-calendar' ) );
+			wp_die( esc_html__( 'You do not have permission to perform this action.', 'buffet-schedule-calendar' ) );
 		}
 
 		$nonce = isset( $_POST[ self::NONCE_NAME ] )
@@ -387,7 +383,7 @@ class Buffet_Calendar_Backend {
 			: '';
 
 		if ( ! wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
-			wp_die( esc_html__( 'Security check failed.', 'buffet-calendar' ) );
+			wp_die( esc_html__( 'Security check failed.', 'buffet-schedule-calendar' ) );
 		}
 
 		if ( isset( $_POST['submit'] ) && isset( $_POST['buffet_calendar_data'] ) ) {
@@ -404,7 +400,7 @@ class Buffet_Calendar_Backend {
 	public function save_settings_data() {
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to perform this action.', 'buffet-calendar' ) );
+			wp_die( esc_html__( 'You do not have permission to perform this action.', 'buffet-schedule-calendar' ) );
 		}
 
 		$nonce = isset( $_POST[ self::NONCE_NAME ] )
@@ -412,7 +408,7 @@ class Buffet_Calendar_Backend {
 			: '';
 
 		if ( ! wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
-			wp_die( esc_html__( 'Security check failed.', 'buffet-calendar' ) );
+			wp_die( esc_html__( 'Security check failed.', 'buffet-schedule-calendar' ) );
 		}
 
 		if ( isset( $_POST['submit'] ) && isset( $_POST['buffet_calendar_setting'] ) ) {
@@ -443,9 +439,9 @@ class Buffet_Calendar_Backend {
 				<table class="widefat buffet-calendar-settings-table">
 					<thead>
 						<tr>
-							<th scope="col" class="buffet-calendar-col-label"><?php esc_html_e( 'Label', 'buffet-calendar' ); ?></th>
-							<th scope="col" class="buffet-calendar-col-color"><?php esc_html_e( 'Color', 'buffet-calendar' ); ?></th>
-							<th scope="col" class="buffet-calendar-col-enabled"><?php esc_html_e( 'Enabled', 'buffet-calendar' ); ?></th>
+							<th scope="col" class="buffet-calendar-col-label"><?php esc_html_e( 'Label', 'buffet-schedule-calendar' ); ?></th>
+							<th scope="col" class="buffet-calendar-col-color"><?php esc_html_e( 'Color', 'buffet-schedule-calendar' ); ?></th>
+							<th scope="col" class="buffet-calendar-col-enabled"><?php esc_html_e( 'Enabled', 'buffet-schedule-calendar' ); ?></th>
 							<th scope="col" class="buffet-calendar-col-actions"></th>
 						</tr>
 					</thead>
@@ -457,12 +453,12 @@ class Buffet_Calendar_Backend {
 				</table>
 				<p>
 					<button type="button" class="button" id="buffet-calendar-add-row">
-						<?php esc_html_e( 'Add Label', 'buffet-calendar' ); ?>
+						<?php esc_html_e( 'Add Label', 'buffet-schedule-calendar' ); ?>
 					</button>
 				</p>
 				<input type="hidden" name="action" value="buffet_calendar_save_settings">
 				<p class="submit">
-					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-calendar' ); ?>">
+					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-schedule-calendar' ); ?>">
 				</p>
 			</form>
 
@@ -502,7 +498,7 @@ class Buffet_Calendar_Backend {
 			</td>
 			<td>
 				<button type="button" class="button-link button-link-delete buffet-calendar-remove-row">
-					<?php esc_html_e( 'Remove', 'buffet-calendar' ); ?>
+					<?php esc_html_e( 'Remove', 'buffet-schedule-calendar' ); ?>
 				</button>
 			</td>
 		</tr>
