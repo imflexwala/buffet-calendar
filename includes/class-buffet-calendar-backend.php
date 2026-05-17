@@ -49,8 +49,8 @@ class Buffet_Calendar_Backend {
 
 	public function admin_menu() {
 		$this->calendar_page_hook = add_menu_page(
-			__( 'Calendar Timings', 'buffet-schedule-calendar' ),
-			__( 'Buffet Calendar', 'buffet-schedule-calendar' ),
+			__( 'Calendar Timings', 'hapnics-buffet-meals-schedule-calendar' ),
+			__( 'Buffet Calendar', 'hapnics-buffet-meals-schedule-calendar' ),
 			'manage_options',
 			'buffet-calendar-page',
 			array( $this, 'calendar_page_callback' ),
@@ -58,8 +58,8 @@ class Buffet_Calendar_Backend {
 
 		$this->settings_page_hook = add_submenu_page(
 			'buffet-calendar-page',
-			__( 'Calendar Settings', 'buffet-schedule-calendar' ),
-			__( 'Calendar Settings', 'buffet-schedule-calendar' ),
+			__( 'Calendar Settings', 'hapnics-buffet-meals-schedule-calendar' ),
+			__( 'Calendar Settings', 'hapnics-buffet-meals-schedule-calendar' ),
 			'manage_options',
 			'buffet-calendar-settings-page',
 			array( $this, 'settings_page_callback' )
@@ -91,12 +91,12 @@ class Buffet_Calendar_Backend {
 	 */
 	private static function default_settings() {
 		return [
-			'1' => [ 'label' => __( 'Breakfast 7:30 am - 10 am, Dinner 4 pm - 9:30 pm', 'buffet-schedule-calendar' ),                  'color' => '#e6cf04', 'enabled' => true ],
-			'2' => [ 'label' => __( 'Breakfast 7:30 am - 10 am, Lunch 12 pm - 2 pm, Dinner 4 pm - 11 pm', 'buffet-schedule-calendar' ), 'color' => '#22a71c', 'enabled' => true ],
-			'3' => [ 'label' => __( 'Lunch 12 pm - 4 pm', 'buffet-schedule-calendar' ),                                                'color' => '#ffa500', 'enabled' => true ],
-			'4' => [ 'label' => __( 'Breakfast 7:30 am - 10 am', 'buffet-schedule-calendar' ),                                         'color' => '#0a8cee', 'enabled' => true ],
-			'5' => [ 'label' => __( 'Coffee & Cake 4 pm - 9 pm', 'buffet-schedule-calendar' ),                                         'color' => '#f5f5dc', 'enabled' => true ],
-			'6' => [ 'label' => __( 'Closed', 'buffet-schedule-calendar' ),                                                            'color' => '#f11111', 'enabled' => true ],
+			'1' => [ 'label' => __( 'Breakfast 7:30 am - 10 am, Dinner 4 pm - 9:30 pm', 'hapnics-buffet-meals-schedule-calendar' ),                  'color' => '#e6cf04', 'enabled' => true ],
+			'2' => [ 'label' => __( 'Breakfast 7:30 am - 10 am, Lunch 12 pm - 2 pm, Dinner 4 pm - 11 pm', 'hapnics-buffet-meals-schedule-calendar' ), 'color' => '#22a71c', 'enabled' => true ],
+			'3' => [ 'label' => __( 'Lunch 12 pm - 4 pm', 'hapnics-buffet-meals-schedule-calendar' ),                                                'color' => '#ffa500', 'enabled' => true ],
+			'4' => [ 'label' => __( 'Breakfast 7:30 am - 10 am', 'hapnics-buffet-meals-schedule-calendar' ),                                         'color' => '#0a8cee', 'enabled' => true ],
+			'5' => [ 'label' => __( 'Coffee & Cake 4 pm - 9 pm', 'hapnics-buffet-meals-schedule-calendar' ),                                         'color' => '#f5f5dc', 'enabled' => true ],
+			'6' => [ 'label' => __( 'Closed', 'hapnics-buffet-meals-schedule-calendar' ),                                                            'color' => '#f11111', 'enabled' => true ],
 		];
 	}
 
@@ -210,7 +210,7 @@ class Buffet_Calendar_Backend {
 			<div class="buffet-calendar">
 				<form id="buffet_calendar_form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<?php wp_nonce_field( self::NONCE_ACTION, self::NONCE_NAME ); ?>
-					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-schedule-calendar' ); ?>">
+					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'hapnics-buffet-meals-schedule-calendar' ); ?>">
 					<div class="mt-5 row">
 						<?php foreach ( $months as $month ) : ?>
 							<div class="col-md-12">
@@ -220,7 +220,7 @@ class Buffet_Calendar_Backend {
 							</div>
 						<?php endforeach; ?>
 					</div>
-					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-schedule-calendar' ); ?>">
+					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'hapnics-buffet-meals-schedule-calendar' ); ?>">
 					<input type="hidden" name="action" value="buffet_calendar_save_data">
 				</form>
 			</div>
@@ -282,7 +282,7 @@ class Buffet_Calendar_Backend {
 			<select data-id="<?php echo esc_attr( 'event-' . $month . '-' . $day ); ?>"
 			        name="buffet_calendar_data[<?php echo esc_attr( $month ); ?>][<?php echo esc_attr( $day ); ?>]"
 			        class="buffet-calendar-select">
-				<option value="" <?php selected( $value, '' ); ?>><?php esc_html_e( 'Select an option', 'buffet-schedule-calendar' ); ?></option>
+				<option value="" <?php selected( $value, '' ); ?>><?php esc_html_e( 'Select an option', 'hapnics-buffet-meals-schedule-calendar' ); ?></option>
 				<?php foreach ( $settings as $key => $row ) : ?>
 					<?php if ( empty( $row['enabled'] ) && (string) $key !== (string) $value ) {
 						continue;
@@ -375,7 +375,7 @@ class Buffet_Calendar_Backend {
 	public function save_calendar_data() {
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to perform this action.', 'buffet-schedule-calendar' ) );
+			wp_die( esc_html__( 'You do not have permission to perform this action.', 'hapnics-buffet-meals-schedule-calendar' ) );
 		}
 
 		$nonce = isset( $_POST[ self::NONCE_NAME ] )
@@ -383,7 +383,7 @@ class Buffet_Calendar_Backend {
 			: '';
 
 		if ( ! wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
-			wp_die( esc_html__( 'Security check failed.', 'buffet-schedule-calendar' ) );
+			wp_die( esc_html__( 'Security check failed.', 'hapnics-buffet-meals-schedule-calendar' ) );
 		}
 
 		if ( isset( $_POST['submit'] ) && isset( $_POST['buffet_calendar_data'] ) ) {
@@ -400,7 +400,7 @@ class Buffet_Calendar_Backend {
 	public function save_settings_data() {
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to perform this action.', 'buffet-schedule-calendar' ) );
+			wp_die( esc_html__( 'You do not have permission to perform this action.', 'hapnics-buffet-meals-schedule-calendar' ) );
 		}
 
 		$nonce = isset( $_POST[ self::NONCE_NAME ] )
@@ -408,7 +408,7 @@ class Buffet_Calendar_Backend {
 			: '';
 
 		if ( ! wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
-			wp_die( esc_html__( 'Security check failed.', 'buffet-schedule-calendar' ) );
+			wp_die( esc_html__( 'Security check failed.', 'hapnics-buffet-meals-schedule-calendar' ) );
 		}
 
 		if ( isset( $_POST['submit'] ) && isset( $_POST['buffet_calendar_setting'] ) ) {
@@ -439,9 +439,9 @@ class Buffet_Calendar_Backend {
 				<table class="widefat buffet-calendar-settings-table">
 					<thead>
 						<tr>
-							<th scope="col" class="buffet-calendar-col-label"><?php esc_html_e( 'Label', 'buffet-schedule-calendar' ); ?></th>
-							<th scope="col" class="buffet-calendar-col-color"><?php esc_html_e( 'Color', 'buffet-schedule-calendar' ); ?></th>
-							<th scope="col" class="buffet-calendar-col-enabled"><?php esc_html_e( 'Enabled', 'buffet-schedule-calendar' ); ?></th>
+							<th scope="col" class="buffet-calendar-col-label"><?php esc_html_e( 'Label', 'hapnics-buffet-meals-schedule-calendar' ); ?></th>
+							<th scope="col" class="buffet-calendar-col-color"><?php esc_html_e( 'Color', 'hapnics-buffet-meals-schedule-calendar' ); ?></th>
+							<th scope="col" class="buffet-calendar-col-enabled"><?php esc_html_e( 'Enabled', 'hapnics-buffet-meals-schedule-calendar' ); ?></th>
 							<th scope="col" class="buffet-calendar-col-actions"></th>
 						</tr>
 					</thead>
@@ -453,12 +453,12 @@ class Buffet_Calendar_Backend {
 				</table>
 				<p>
 					<button type="button" class="button" id="buffet-calendar-add-row">
-						<?php esc_html_e( 'Add Label', 'buffet-schedule-calendar' ); ?>
+						<?php esc_html_e( 'Add Label', 'hapnics-buffet-meals-schedule-calendar' ); ?>
 					</button>
 				</p>
 				<input type="hidden" name="action" value="buffet_calendar_save_settings">
 				<p class="submit">
-					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'buffet-schedule-calendar' ); ?>">
+					<input class="button button-primary" type="submit" name="submit" value="<?php esc_attr_e( 'Save', 'hapnics-buffet-meals-schedule-calendar' ); ?>">
 				</p>
 			</form>
 
@@ -498,7 +498,7 @@ class Buffet_Calendar_Backend {
 			</td>
 			<td>
 				<button type="button" class="button-link button-link-delete buffet-calendar-remove-row">
-					<?php esc_html_e( 'Remove', 'buffet-schedule-calendar' ); ?>
+					<?php esc_html_e( 'Remove', 'hapnics-buffet-meals-schedule-calendar' ); ?>
 				</button>
 			</td>
 		</tr>

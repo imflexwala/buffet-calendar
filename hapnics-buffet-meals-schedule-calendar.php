@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Buffet and Meal Schedule Calendar
+ * Plugin Name: Hapnics Buffet and Meals Schedule Calendar
  * Plugin URI: https://github.com/imflexwala/buffet-calendar
  * Description: Publish daily meal-service hours, buffet times, and prices on a color-coded monthly calendar. Built for hotels, restaurants, cafés, and resorts with variable daily schedules.
  * Version: 1.0.0
@@ -8,7 +8,7 @@
  * Author URI: https://www.linkedin.com/in/imflexwala/
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: buffet-schedule-calendar
+ * Text Domain: hapnics-buffet-meals-schedule-calendar
  * Domain Path: /languages
  * Requires at least: 5.6
  * Requires PHP: 7.4

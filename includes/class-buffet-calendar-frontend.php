@@ -114,7 +114,7 @@ class Buffet_Calendar_Frontend {
 		        <?php foreach ( $months as $key => $month ) : ?>
 			        <?php if ( $key == 3 ) : ?>
                         <div class="buffet-calendar-text-center">
-                            <div class="buffet-calendar-btn show-row-3"><?php esc_html_e( 'Show more', 'buffet-schedule-calendar' ); ?></div>
+                            <div class="buffet-calendar-btn show-row-3"><?php esc_html_e( 'Show more', 'hapnics-buffet-meals-schedule-calendar' ); ?></div>
                         </div>
 			        <?php endif; ?>
 			        <?php if ( $key == 0 || $key == 3 ) : ?>

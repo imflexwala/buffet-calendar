@@ -2,7 +2,7 @@
 # This file is distributed under the GPL v2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Buffet Calendar 1.0.0\n"
+"Project-Id-Version: Hapnics Buffet and Meals Schedule Calendar 1.0.0\n"
 "Report-Msgid-Bugs-To: https://www.linkedin.com/in/imflexwala/\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-08T00:00:00+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Domain: buffet-schedule-calendar\n"
+"X-Domain: hapnics-buffet-meals-schedule-calendar\n"
 
 #: includes/class-buffet-calendar-backend.php:44
 msgid "Calendar Timings"
